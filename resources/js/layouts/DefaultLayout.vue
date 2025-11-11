@@ -31,7 +31,7 @@
         </Link>
 
         <Link
-          v-if="authStore.hasRole(['Admin', 'Manager'])"
+          v-if="hasRole(['Admin', 'Manager'])"
           href="/menu"
           class="group flex items-center px-3 py-2 text-sm font-medium rounded-md mb-1"
           :class="isActive('/menu')"
@@ -43,7 +43,7 @@
         </Link>
 
         <Link
-          v-if="authStore.hasRole(['Admin', 'Manager'])"
+          v-if="hasRole(['Admin', 'Manager'])"
           href="/modifiers"
           class="group flex items-center px-3 py-2 text-sm font-medium rounded-md mb-1"
           :class="isActive('/modifiers')"
@@ -55,7 +55,7 @@
         </Link>
 
         <Link
-          v-if="authStore.hasRole(['Admin', 'Manager'])"
+          v-if="hasRole(['Admin', 'Manager'])"
           href="/categories"
           class="group flex items-center px-3 py-2 text-sm font-medium rounded-md mb-1"
           :class="isActive('/categories')"
@@ -101,7 +101,7 @@
         </Link>
 
         <Link
-          v-if="authStore.hasRole(['Admin', 'Manager'])"
+          v-if="hasRole(['Admin', 'Manager'])"
           href="/reports"
           class="group flex items-center px-3 py-2 text-sm font-medium rounded-md mb-1"
           :class="isActive('/reports')"
@@ -118,15 +118,15 @@
         <div class="flex items-center">
           <div class="flex-shrink-0">
             <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
-              {{ authStore.user?.name?.charAt(0).toUpperCase() }}
+              {{ authUser?.name?.charAt(0).toUpperCase() }}
             </div>
           </div>
           <div class="ml-3 flex-1">
             <p class="text-sm font-medium text-white">
-              {{ authStore.user?.name }}
+              {{ authUser?.name }}
             </p>
             <p class="text-xs text-gray-400">
-              {{ authStore.userRole }}
+              {{ userRole }}
             </p>
           </div>
         </div>
@@ -216,6 +216,17 @@ const authStore = useAuthStore();
 const page = usePage();
 
 const currentPath = computed(() => page.url);
+
+// Get user data from Inertia props (always up-to-date)
+const authUser = computed(() => (page.props.auth as any)?.user || null);
+const userRole = computed(() => authUser.value?.role?.name || null);
+
+// Helper function to check if user has role
+const hasRole = (roles: string | string[]): boolean => {
+  if (!userRole.value) return false;
+  const roleArray = Array.isArray(roles) ? roles : [roles];
+  return roleArray.includes(userRole.value);
+};
 
 const sidebarOpen = ref(false);
 const currentDateTime = ref('');

@@ -56,13 +56,6 @@
             <span class="px-2 bg-white text-gray-500">ข้อมูลทดสอบ</span>
           </div>
         </div>
-
-        <div class="mt-4 text-xs text-gray-600 space-y-1">
-          <p><strong>ผู้ดูแลระบบ:</strong> admin@nexadon.com / password</p>
-          <p><strong>ผู้จัดการ:</strong> manager@nexadon.com / password</p>
-          <p><strong>แคชเชียร์:</strong> cashier@nexadon.com / password</p>
-          <p><strong>พนักงานเสิร์ฟ:</strong> waiter@nexadon.com / password</p>
-        </div>
       </div>
     </div>
   </AuthLayout>
@@ -70,7 +63,6 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue';
-import { router } from '@inertiajs/vue3';
 import { useAuthStore } from '@/stores/auth';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 
@@ -91,11 +83,12 @@ const handleLogin = async () => {
   const result = await authStore.login(form.email, form.password);
 
   if (result.success) {
-    router.visit('/dashboard');
+    // Use window.location instead of router.visit to force full page reload
+    // This ensures Inertia props are properly loaded with user data
+    window.location.href = '/dashboard';
   } else {
     error.value = result.error || 'เข้าสู่ระบบไม่สำเร็จ';
+    loading.value = false;
   }
-
-  loading.value = false;
 };
 </script>

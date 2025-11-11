@@ -50,7 +50,7 @@
             </Link>
 
             <Link
-              v-if="authStore.hasRole(['Admin', 'Manager'])"
+              v-if="hasRole(['Admin', 'Manager'])"
               href="/menu"
               class="inline-flex items-center px-3 lg:px-4 py-2 text-sm font-medium rounded-lg transition-colors"
               :class="isActive('/menu')"
@@ -67,7 +67,7 @@
             </Link>
 
             <Link
-              v-if="authStore.hasRole(['Admin', 'Manager'])"
+              v-if="hasRole(['Admin', 'Manager'])"
               href="/kitchen"
               class="inline-flex items-center px-3 lg:px-4 py-2 text-sm font-medium rounded-lg transition-colors"
               :class="isActive('/kitchen')"
@@ -76,7 +76,7 @@
             </Link>
 
             <Link
-              v-if="authStore.hasRole(['Admin', 'Manager'])"
+              v-if="hasRole(['Admin', 'Manager'])"
               href="/reports"
               class="inline-flex items-center px-3 lg:px-4 py-2 text-sm font-medium rounded-lg transition-colors"
               :class="isActive('/reports')"
@@ -99,8 +99,8 @@
               <div class="h-6 w-px bg-gray-300"></div>
               <div class="flex items-center gap-2">
                 <div class="text-right">
-                  <div class="text-sm font-medium text-gray-900">{{ authStore.user?.name }}</div>
-                  <div class="text-xs text-gray-500">{{ authStore.userRole }}</div>
+                  <div class="text-sm font-medium text-gray-900">{{ authUser?.name }}</div>
+                  <div class="text-xs text-gray-500">{{ userRole }}</div>
                 </div>
                 <button
                   @click="handleLogout"
@@ -133,7 +133,7 @@
           </Link>
 
           <Link
-            v-if="authStore.hasRole(['Admin', 'Manager'])"
+            v-if="hasRole(['Admin', 'Manager'])"
             href="/menu"
             @click="mobileMenuOpen = false"
             class="block px-3 py-2 rounded-md text-base font-medium"
@@ -152,7 +152,7 @@
           </Link>
 
           <Link
-            v-if="authStore.hasRole(['Admin', 'Manager'])"
+            v-if="hasRole(['Admin', 'Manager'])"
             href="/kitchen"
             @click="mobileMenuOpen = false"
             class="block px-3 py-2 rounded-md text-base font-medium"
@@ -162,7 +162,7 @@
           </Link>
 
           <Link
-            v-if="authStore.hasRole(['Admin', 'Manager'])"
+            v-if="hasRole(['Admin', 'Manager'])"
             href="/reports"
             @click="mobileMenuOpen = false"
             class="block px-3 py-2 rounded-md text-base font-medium"
@@ -175,12 +175,12 @@
         <!-- Mobile User Menu -->
         <div class="pt-3 pb-3 border-t border-gray-200 bg-gray-50">
           <div class="px-4 mb-3">
-            <div class="text-sm font-semibold text-gray-800">{{ authStore.user?.name }}</div>
+            <div class="text-sm font-semibold text-gray-800">{{ authUser?.name }}</div>
             <div class="flex items-center gap-2 mt-1">
               <span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">
-                {{ authStore.userRole }}
+                {{ userRole }}
               </span>
-              <span class="text-xs text-gray-500">{{ authStore.user?.email }}</span>
+              <span class="text-xs text-gray-500">{{ authUser?.email }}</span>
             </div>
           </div>
           <div class="px-2">
@@ -216,6 +216,17 @@ const authStore = useAuthStore();
 const page = usePage();
 const mobileMenuOpen = ref(false);
 const currentTime = ref('');
+
+// Get user data from Inertia props (always up-to-date)
+const authUser = computed(() => (page.props.auth as any)?.user || null);
+const userRole = computed(() => authUser.value?.role?.name || null);
+
+// Helper function to check if user has role
+const hasRole = (roles: string | string[]): boolean => {
+  if (!userRole.value) return false;
+  const roleArray = Array.isArray(roles) ? roles : [roles];
+  return roleArray.includes(userRole.value);
+};
 
 // Update time every second
 let timeInterval: number;

@@ -73,15 +73,18 @@ export const useAuthStore = defineStore('auth', () => {
             // Get CSRF cookie first
             await auth.getCsrfCookie();
 
-            // Attempt login
-            await api.post('/login', { email, password });
-
-            // Fetch user data
-            await fetchUser();
+            // Attempt login - backend will set session
+            const response = await api.post('/login', { email, password });
+            
+            // Set user data from login response immediately
+            if (response.data.user) {
+                user.value = response.data.user;
+            }
 
             return { success: true };
         } catch (err: any) {
             error.value = err.response?.data?.message || 'Login failed';
+            user.value = null;
             return { success: false, error: error.value };
         } finally {
             loading.value = false;
