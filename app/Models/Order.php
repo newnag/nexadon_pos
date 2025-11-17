@@ -14,6 +14,9 @@ class Order extends Model
     protected $fillable = [
         'table_id',
         'user_id',
+        'order_type',
+        'customer_name',
+        'customer_phone',
         'status',
         'total_amount',
     ];
@@ -24,6 +27,7 @@ class Order extends Model
 
     /**
      * Get the table that owns the order.
+     * For takeaway orders, this will be null.
      */
     public function table(): BelongsTo
     {

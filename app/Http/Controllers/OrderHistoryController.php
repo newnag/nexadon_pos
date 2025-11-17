@@ -42,11 +42,13 @@ class OrderHistoryController extends Controller
             $query->whereDate('created_at', '<=', $request->to);
         }
 
-        // Search by table number or order ID
+        // Search by table number, customer info, or order ID
         if ($request->has('search') && $request->search) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('id', 'like', "%{$search}%")
+                    ->orWhere('customer_name', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%")
                     ->orWhereHas('table', function ($q) use ($search) {
                         $q->where('table_number', 'like', "%{$search}%");
                     });
@@ -77,10 +79,13 @@ class OrderHistoryController extends Controller
         return response()->json([
             'order' => [
                 'id' => $order->id,
-                'table' => [
+                'order_type' => $order->order_type,
+                'table' => $order->table ? [
                     'id' => $order->table->id,
                     'table_number' => $order->table->table_number,
-                ],
+                ] : null,
+                'customer_name' => $order->customer_name,
+                'customer_phone' => $order->customer_phone,
                 'waiter' => [
                     'id' => $order->user->id,
                     'name' => $order->user->name,

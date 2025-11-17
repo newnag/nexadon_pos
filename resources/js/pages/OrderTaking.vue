@@ -50,7 +50,7 @@
                         <div class="bg-white rounded-lg shadow-sm p-3 md:p-4 lg:sticky lg:top-4">
                             <h2 class="text-lg md:text-xl font-semibold mb-3 md:mb-4">ออเดอร์ปัจจุบัน</h2>
 
-                            <!-- Table Info (Display Only) -->
+                            <!-- Table Info (Display Only - Dine-in) -->
                             <div v-if="currentTable" class="mb-3 md:mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                                 <div class="flex items-center justify-between mb-3">
                                     <div>
@@ -142,7 +142,7 @@
                             <div class="space-y-2">
                                 <button
                                     @click="placeOrder"
-                                    :disabled="cartStore.items.length === 0 || !currentTable || submitting"
+                                    :disabled="!canPlaceOrder || submitting"
                                     class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 md:py-3 rounded-lg font-semibold text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed transition"
                                 >
                                     {{ submitting ? 'กำลังสั่งอาหาร...' : 'ยืนยันการสั่งอาหาร' }}
@@ -386,6 +386,12 @@ const closeAlertModal = () => {
     showAlertModal.value = false;
 };
 
+// Check if order can be placed (dine-in only)
+const canPlaceOrder = computed(() => {
+    if (cartStore.items.length === 0) return false;
+    return currentTable.value !== null;
+});
+
 const filteredMenuItems = computed(() => {
     if (!selectedCategory.value) return menuItems.value;
     return menuItems.value.filter((item) => item.category?.id === parseInt(selectedCategory.value));
@@ -457,13 +463,20 @@ const addToCartFromModal = () => {
 };
 
 const placeOrder = async () => {
-    if (!selectedTable.value || cartStore.items.length === 0) return;
+    if (cartStore.items.length === 0) return;
+
+    // Validate table selection (dine-in only)
+    if (!selectedTable.value) {
+        showAlert('กรุณาเลือกโต๊ะก่อนสั่งอาหาร', 'warning');
+        return;
+    }
 
     submitting.value = true;
     try {
-        const orderData = {
-            table_id: parseInt(selectedTable.value),
+        const orderData: any = {
+            order_type: 'dine-in',
             order_items: cartStore.getOrderItems(),
+            table_id: parseInt(selectedTable.value),
         };
 
         // If table has existing order, update it instead of creating new one

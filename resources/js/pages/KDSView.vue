@@ -35,10 +35,22 @@
           }"
         >
           <!-- Order Header -->
-          <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4">
+          <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4"
+            :class="{
+              'from-orange-600 to-orange-700': order.order_type === 'takeaway'
+            }"
+          >
             <div class="flex justify-between items-start">
               <div>
-                <h3 class="text-3xl font-bold mb-1">โต๊ะ {{ order.table.number }}</h3>
+                <h3 class="text-3xl font-bold mb-1">
+                  <template v-if="order.order_type === 'takeaway'">
+                    🥡 {{ order.customer_name }}
+                  </template>
+                  <template v-else>
+                    โต๊ะ {{ order.table?.table_number || '-' }}
+                  </template>
+                </h3>
+                <p class="text-blue-100 text-sm" v-if="order.order_type === 'takeaway'">{{ order.customer_phone }}</p>
                 <p class="text-blue-100 text-sm">ออเดอร์ #{{ order.order_id }}</p>
               </div>
               <div class="text-right">

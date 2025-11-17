@@ -23,7 +23,7 @@ class UserSeeder extends Seeder
 
         // Create default admin user
         User::firstOrCreate(
-            ['email' => 'admin@nexadon.com'],
+            ['email' => 'inrada.nkb@gmail.com'],
             [
                 'name' => 'System Administrator',
                 'password' => Hash::make('password'),
@@ -102,8 +102,5 @@ class UserSeeder extends Seeder
         }
 
         $this->command->info('Users seeded successfully!');
-        $this->command->info('Default admin credentials:');
-        $this->command->info('Email: admin@nexadon.com');
-        $this->command->info('Password: password');
     }
 }

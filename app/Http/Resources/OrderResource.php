@@ -17,12 +17,17 @@ class OrderResource extends JsonResource
         return [
             'id' => $this->id,
             'status' => $this->status,
+            'order_type' => $this->order_type,
+            'customer_name' => $this->customer_name,
+            'customer_phone' => $this->customer_phone,
             'total_amount' => $this->total_amount,
-            'table' => [
-                'id' => $this->table->id,
-                'table_number' => $this->table->table_number,
-                'status' => $this->table->status,
-            ],
+            'table' => $this->when($this->table, function () {
+                return [
+                    'id' => $this->table->id,
+                    'table_number' => $this->table->table_number,
+                    'status' => $this->table->status,
+                ];
+            }),
             'user' => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,

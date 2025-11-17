@@ -19,27 +19,46 @@ class OrderController extends Controller
 {
     /**
      * Create a new order with items.
-     * Calculate total price and update table status to 'occupied'.
+     * Calculate total price and update table status to 'occupied' (for dine-in only).
+     * Supports both dine-in and takeaway orders.
      */
     public function store(StoreOrderRequest $request): JsonResponse
     {
         try {
             DB::beginTransaction();
 
-            // Get the table and check if it's available
-            $table = Table::findOrFail($request->table_id);
-            
-            if ($table->status === 'occupied') {
-                DB::rollBack();
-                return response()->json([
-                    'message' => 'Table is already occupied. Please select another table.',
-                ], 422);
+            $orderType = $request->input('order_type', 'dine-in');
+            $tableId = null;
+
+            // For dine-in orders, validate and check table
+            if ($orderType === 'dine-in') {
+                if (!$request->table_id) {
+                    DB::rollBack();
+                    return response()->json([
+                        'message' => 'Table is required for dine-in orders.',
+                    ], 422);
+                }
+
+                // Get the table and check if it's available
+                $table = Table::findOrFail($request->table_id);
+                
+                if ($table->status === 'occupied') {
+                    DB::rollBack();
+                    return response()->json([
+                        'message' => 'Table is already occupied. Please select another table.',
+                    ], 422);
+                }
+                
+                $tableId = $request->table_id;
             }
 
             // Create the order
             $order = Order::create([
-                'table_id' => $request->table_id,
+                'table_id' => $tableId,
                 'user_id' => $request->user()->id,
+                'order_type' => $orderType,
+                'customer_name' => $request->input('customer_name'),
+                'customer_phone' => $request->input('customer_phone'),
                 'status' => 'pending',
                 'total_amount' => 0, // Will calculate below
             ]);
@@ -84,8 +103,10 @@ class OrderController extends Controller
             // Update order total amount
             $order->update(['total_amount' => $totalAmount]);
 
-            // Update table status to occupied
-            $table->update(['status' => 'occupied']);
+            // Update table status to occupied (dine-in only)
+            if ($orderType === 'dine-in' && isset($table)) {
+                $table->update(['status' => 'occupied']);
+            }
 
             // Load relationships for response
             $order->load(['table', 'user.role', 'orderItems.menuItem.category', 'orderItems.modifiers']);
@@ -220,10 +241,28 @@ class OrderController extends Controller
 
     /**
      * Display a listing of the resource.
+     * Supports filtering by order_type and status.
      */
-    public function index()
+    public function index(Request $request): JsonResponse
     {
-        //
+        $query = Order::with(['table', 'user.role', 'orderItems.menuItem.category', 'orderItems.modifiers', 'payment']);
+
+        // Filter by order_type if provided
+        if ($request->has('order_type')) {
+            $query->where('order_type', $request->order_type);
+        }
+
+        // Filter by status if provided (can be comma-separated)
+        if ($request->has('status')) {
+            $statuses = explode(',', $request->status);
+            $query->whereIn('status', $statuses);
+        }
+
+        $orders = $query->orderBy('created_at', 'desc')->get();
+
+        return response()->json([
+            'data' => OrderResource::collection($orders),
+        ], 200);
     }
 
     /**

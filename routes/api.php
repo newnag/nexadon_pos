@@ -70,6 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Orders - All authenticated users can manage orders
+    Route::get('/orders', [OrderController::class, 'index'])->name('api.orders.index');
     Route::post('/orders', [OrderController::class, 'store'])->name('api.orders.store');
     Route::get('/orders/active', [OrderController::class, 'active'])->name('api.orders.active');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('api.orders.show');

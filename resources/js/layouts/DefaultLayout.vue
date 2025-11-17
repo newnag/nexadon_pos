@@ -78,6 +78,17 @@
         </Link>
 
         <Link
+          href="/takeaway"
+          class="group flex items-center px-3 py-2 text-sm font-medium rounded-md mb-1"
+          :class="isActive('/takeaway')"
+        >
+          <svg class="mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+          🥡 ออเดอร์กลับบ้าน
+        </Link>
+
+        <Link
           v-if="authStore.hasRole(['Admin', 'Manager'])"
           href="/kitchen"
           class="group flex items-center px-3 py-2 text-sm font-medium rounded-md mb-1"
@@ -238,6 +249,8 @@ const pageTitle = computed(() => {
     '/modifiers': 'ตัวเลือกเพิ่มเติม',
     '/categories': 'หมวดหมู่อาหาร',
     '/tables': 'จัดการโต๊ะ',
+    '/takeaway': 'ออเดอร์กลับบ้าน',
+    '/takeaway/new': 'สร้างออเดอร์กลับบ้าน',
     '/kitchen': 'จอครัว',
     '/order-history': 'ประวัติการสั่งอาหาร',
     '/reports': 'รายงานและสถิติ',

@@ -60,8 +60,10 @@ class PaymentController extends Controller
             // Update order status to completed
             $order->update(['status' => 'completed']);
 
-            // Update table status to available
-            $order->table->update(['status' => 'available']);
+            // Update table status to available (only for dine-in orders with table)
+            if ($order->table) {
+                $order->table->update(['status' => 'available']);
+            }
 
             // Load relationships for response
             $payment->load('order.table');

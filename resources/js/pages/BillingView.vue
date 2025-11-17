@@ -44,22 +44,38 @@
                                 <p class="text-sm text-gray-600">หมายเลขออเดอร์</p>
                                 <p class="text-lg font-semibold text-gray-900">#{{ order.id }}</p>
                             </div>
-                            <div>
+                            <div v-if="order.order_type === 'dine-in' && order.table">
                                 <p class="text-sm text-gray-600">โต๊ะ</p>
                                 <p class="text-lg font-semibold text-gray-900">{{ order.table.table_number }}</p>
+                            </div>
+                            <div v-else-if="order.order_type === 'takeaway'">
+                                <p class="text-sm text-gray-600">ชื่อลูกค้า</p>
+                                <p class="text-lg font-semibold text-gray-900">{{ order.customer_name }}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600">พนักงาน</p>
                                 <p class="text-lg font-semibold text-gray-900">{{ order.user.name }}</p>
                             </div>
-                            <div>
+                            <div v-if="order.order_type === 'takeaway'">
+                                <p class="text-sm text-gray-600">เบอร์โทร</p>
+                                <p class="text-lg font-semibold text-gray-900">{{ order.customer_phone }}</p>
+                            </div>
+                            <div :class="order.order_type === 'takeaway' ? 'col-span-2' : ''">
                                 <p class="text-sm text-gray-600">วันที่ & เวลา</p>
                                 <p class="text-lg font-semibold text-gray-900">{{ formatDateTime(order.created_at) }}</p>
                             </div>
                         </div>
 
                         <!-- Status Badge -->
-                        <div class="mt-4">
+                        <div class="mt-4 flex gap-2">
+                            <span
+                                :class="[
+                                    'inline-block px-3 py-1 text-sm font-semibold rounded-full',
+                                    order.order_type === 'takeaway' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
+                                ]"
+                            >
+                                {{ order.order_type === 'takeaway' ? '🥡 กลับบ้าน' : '🍽️ ทานที่ร้าน' }}
+                            </span>
                             <span
                                 :class="[
                                     'inline-block px-3 py-1 text-sm font-semibold rounded-full',
@@ -355,9 +371,13 @@
                             <span class="text-gray-600">หมายเลขออเดอร์:</span>
                             <span class="font-semibold text-gray-900">#{{ order?.id }}</span>
                         </div>
-                        <div class="flex justify-between text-sm mb-2">
+                        <div v-if="order?.order_type === 'dine-in' && order?.table" class="flex justify-between text-sm mb-2">
                             <span class="text-gray-600">โต๊ะ:</span>
-                            <span class="font-semibold text-gray-900">{{ order?.table.table_number }}</span>
+                            <span class="font-semibold text-gray-900">{{ order.table.table_number }}</span>
+                        </div>
+                        <div v-else-if="order?.order_type === 'takeaway'" class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-600">ลูกค้า:</span>
+                            <span class="font-semibold text-gray-900">{{ order.customer_name }} ({{ order.customer_phone }})</span>
                         </div>
                         <div class="flex justify-between text-sm mb-2">
                             <span class="text-gray-600">วิธีชำระเงิน:</span>
@@ -501,9 +521,12 @@ interface OrderItem {
 interface Order {
     id: number;
     status: string;
+    order_type: 'dine-in' | 'takeaway';
+    customer_name?: string;
+    customer_phone?: string;
     total_amount: string;
     created_at: string;
-    table: {
+    table?: {
         id: number;
         table_number: string;
         status: string;

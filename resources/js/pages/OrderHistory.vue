@@ -72,7 +72,10 @@
                                         หมายเลขออเดอร์
                                     </th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        โต๊ะ
+                                        ประเภท
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        โต๊ะ/ลูกค้า
                                     </th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         พนักงาน
@@ -100,8 +103,25 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         #{{ order.id }}
                                     </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <span
+                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                            :class="{
+                                                'bg-blue-100 text-blue-800': order.order_type === 'dine-in',
+                                                'bg-orange-100 text-orange-800': order.order_type === 'takeaway'
+                                            }"
+                                        >
+                                            {{ order.order_type === 'takeaway' ? 'กลับบ้าน' : 'ทานที่ร้าน' }}
+                                        </span>
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                        {{ order.table.table_number }}
+                                        <div v-if="order.order_type === 'takeaway'">
+                                            <div class="font-medium">{{ order.customer_name }}</div>
+                                            <div class="text-xs text-gray-500">{{ order.customer_phone }}</div>
+                                        </div>
+                                        <div v-else>
+                                            {{ order.table?.table_number || '-' }}
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                         {{ order.user.name }}
@@ -185,8 +205,25 @@
                     <!-- Order Info -->
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                         <div>
+                            <p class="text-sm text-gray-600">ประเภท</p>
+                            <span
+                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                :class="{
+                                    'bg-blue-100 text-blue-800': selectedOrder.order_type === 'dine-in',
+                                    'bg-orange-100 text-orange-800': selectedOrder.order_type === 'takeaway'
+                                }"
+                            >
+                                {{ selectedOrder.order_type === 'takeaway' ? 'กลับบ้าน' : 'ทานที่ร้าน' }}
+                            </span>
+                        </div>
+                        <div v-if="selectedOrder.order_type === 'takeaway'">
+                            <p class="text-sm text-gray-600">ลูกค้า</p>
+                            <p class="font-semibold">{{ selectedOrder.customer_name }}</p>
+                            <p class="text-xs text-gray-500">{{ selectedOrder.customer_phone }}</p>
+                        </div>
+                        <div v-else>
                             <p class="text-sm text-gray-600">โต๊ะ</p>
-                            <p class="font-semibold">{{ selectedOrder.table.table_number }}</p>
+                            <p class="font-semibold">{{ selectedOrder.table?.table_number || '-' }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-600">พนักงาน</p>

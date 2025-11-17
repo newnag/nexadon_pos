@@ -14,21 +14,14 @@ class TableSeeder extends Seeder
     public function run(): void
     {
         $tables = [
-            ['table_number' => 'T01', 'status' => 'available'],
-            ['table_number' => 'T02', 'status' => 'available'],
-            ['table_number' => 'T03', 'status' => 'available'],
-            ['table_number' => 'T04', 'status' => 'available'],
-            ['table_number' => 'T05', 'status' => 'available'],
-            ['table_number' => 'T06', 'status' => 'available'],
-            ['table_number' => 'T07', 'status' => 'available'],
-            ['table_number' => 'T08', 'status' => 'available'],
-            ['table_number' => 'T09', 'status' => 'available'],
-            ['table_number' => 'T10', 'status' => 'available'],
-            ['table_number' => 'T11', 'status' => 'available'],
-            ['table_number' => 'T12', 'status' => 'available'],
-            ['table_number' => 'VIP01', 'status' => 'available'],
-            ['table_number' => 'VIP02', 'status' => 'available'],
-            ['table_number' => 'BAR01', 'status' => 'available'],
+            ['table_number' => 'โต๊ะ 1', 'status' => 'available'],
+            ['table_number' => 'โต๊ะ 2', 'status' => 'available'],
+            ['table_number' => 'โต๊ะ 3', 'status' => 'available'],
+            ['table_number' => 'โต๊ะ 4', 'status' => 'available'],
+            ['table_number' => 'โต๊ะ 5', 'status' => 'available'],
+            ['table_number' => 'โต๊ะ 6', 'status' => 'available'],
+            ['table_number' => 'โต๊ะ 7', 'status' => 'available'],
+            ['table_number' => 'โต๊ะ 8', 'status' => 'available'],
         ];
 
         foreach ($tables as $table) {

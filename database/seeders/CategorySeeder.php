@@ -14,18 +14,7 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            ['name' => 'Appetizers'],
-            ['name' => 'Main Courses'],
-            ['name' => 'Pasta & Rice'],
-            ['name' => 'Pizza'],
-            ['name' => 'Burgers & Sandwiches'],
-            ['name' => 'Salads'],
-            ['name' => 'Desserts'],
-            ['name' => 'Hot Drinks'],
-            ['name' => 'Cold Drinks'],
-            ['name' => 'Soft Drinks'],
-            ['name' => 'Alcoholic Beverages'],
-            ['name' => 'Smoothies & Juices'],
+            ['name' => 'อาหารตามสั่ง'],
         ];
 
         foreach ($categories as $category) {

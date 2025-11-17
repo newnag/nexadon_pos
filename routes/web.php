@@ -61,3 +61,11 @@ Route::get('/reports', [ReportController::class, 'index'])
 Route::get('/order-history', [OrderHistoryController::class, 'index'])
     ->middleware(['auth'])->name('order-history.index');
 
+Route::get('/takeaway', function () {
+    return Inertia::render('TakeawayOrders');
+})->middleware(['auth'])->name('takeaway.index');
+
+Route::get('/takeaway/new', function () {
+    return Inertia::render('TakeawayOrderTaking');
+})->middleware(['auth'])->name('takeaway.new');
+
