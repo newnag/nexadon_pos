@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OrderItemController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\TableController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderHistoryController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +32,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Authentication routes
     Route::post('/logout', [AuthController::class, 'logout'])->name('api.logout');
     Route::get('/user', [AuthController::class, 'user'])->name('api.user');
+
+    // Dashboard statistics
+    Route::get('/dashboard/stats', [DashboardController::class, 'getStats'])->name('api.dashboard.stats');
 
     // Categories and Modifiers - Read operations (accessible by all authenticated users)
     Route::get('/categories', [CategoryController::class, 'index'])->name('api.categories.index');
