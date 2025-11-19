@@ -329,7 +329,10 @@ const fetchMenuItems = async () => {
     loading.value = true;
     const response = await api.get('/menu-items', {
       params: {
-        per_page: 1000 // Get all items
+        all: true  // Get all items without pagination
+      },
+      headers: {
+        'Cache-Control': 'no-cache'
       }
     });
     

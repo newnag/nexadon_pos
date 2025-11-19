@@ -402,7 +402,10 @@ const fetchMenuItems = async () => {
         const response = await api.get('/menu-items', {
             params: {
                 is_available: true,
-                with: 'modifiers'
+                all: true  // Get all items without pagination
+            },
+            headers: {
+                'Cache-Control': 'no-cache'
             }
         });
         menuItems.value = response.data.data;

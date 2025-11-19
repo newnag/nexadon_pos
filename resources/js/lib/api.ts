@@ -22,6 +22,13 @@ api.interceptors.request.use(
             config.headers['X-CSRF-TOKEN'] = csrfToken;
         }
 
+        // Add cache busting for GET requests to prevent stale data
+        if (config.method === 'get') {
+            config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+            config.headers['Pragma'] = 'no-cache';
+            config.headers['Expires'] = '0';
+        }
+
         return config;
     },
     (error) => {
