@@ -25,14 +25,26 @@ class MenuItemSeeder extends Seeder
 
         // Menu items data
         $menuItems = [
-            ['name' => 'กะเพรา', 'price' => 40, 'category_id' => $category->id, 'is_available' => true],
-            ['name' => 'ข้าวผัด', 'price' => 40, 'category_id' => $category->id, 'is_available' => true],
-            ['name' => 'ผัดเผ็ด', 'price' => 40, 'category_id' => $category->id, 'is_available' => true],
-            ['name' => 'ผัดพริกแกง', 'price' => 50, 'category_id' => $category->id, 'is_available' => true],
-            ['name' => 'ผัดพริกหยวก', 'price' => 50, 'category_id' => $category->id, 'is_available' => true],
-            ['name' => 'ผัดมาม่า', 'price' => 50, 'category_id' => $category->id, 'is_available' => true],
-            ['name' => 'ไข่เจียว', 'price' => 40, 'category_id' => $category->id, 'is_available' => true],
-            ['name' => 'ทอดกระเทียม', 'price' => 50, 'category_id' => $category->id, 'is_available' => true],
+            ['name' => 'กะเพราหมูกรอบ', 'price' => 70, 'category_id' => $category->id, 'is_available' => true],
+            ['name' => 'กะเพราหมูสับ', 'price' => 40, 'category_id' => $category->id, 'is_available' => true],
+            ['name' => 'กะเพราไก่', 'price' => 40, 'category_id' => $category->id, 'is_available' => true],
+            ['name' => 'กะเพราหมูชิ้น', 'price' => 50, 'category_id' => $category->id, 'is_available' => true],
+            ['name' => 'กะเพราเนื้อ', 'price' => 50, 'category_id' => $category->id, 'is_available' => true],
+            ['name' => 'กะเพราหมูป่า', 'price' => 50, 'category_id' => $category->id, 'is_available' => true],
+            ['name' => 'กะเพราปลาดุก', 'price' => 50, 'category_id' => $category->id, 'is_available' => true],
+            ['name' => 'กะเพราทะเล', 'price' => 60, 'category_id' => $category->id, 'is_available' => true],
+            ['name' => 'ข้าวผัดหมู/ไก่', 'price' => 40, 'category_id' => $category->id, 'is_available' => true],
+            ['name' => 'ข้าวผัดทะเล', 'price' => 60, 'category_id' => $category->id, 'is_available' => true],
+            ['name' => 'ไข่เจียวหมูสับ', 'price' => 50, 'category_id' => $category->id, 'is_available' => true],
+            ['name' => 'ผัดมาม่า หมู/ไก่', 'price' => 50, 'category_id' => $category->id, 'is_available' => true],
+            ['name' => 'ผัดมาม่าทะเล', 'price' => 60, 'category_id' => $category->id, 'is_available' => true],
+            ['name' => 'ผัดเผ็ดหมูป่า', 'price' => 50, 'category_id' => $category->id, 'is_available' => true],
+            ['name' => 'ผัดเผ็ดปลาดุก', 'price' => 50, 'category_id' => $category->id, 'is_available' => true],
+            ['name' => 'ผัดเผ็ด หมู/ไก่/เนื้อ', 'price' => 50, 'category_id' => $category->id, 'is_available' => true],
+            ['name' => 'ผัดเผ็ดทะเล', 'price' => 60, 'category_id' => $category->id, 'is_available' => true],
+            ['name' => 'ผัดพริกแกง หมู/ไก่/เนื้อ', 'price' => 50, 'category_id' => $category->id, 'is_available' => true],
+            ['name' => 'ผัดพริกแกงหน่อไม้', 'price' => 50, 'category_id' => $category->id, 'is_available' => true],
+            ['name' => 'ผัดพริกหยวก หมู/ไก่/เนื้อ', 'price' => 50, 'category_id' => $category->id, 'is_available' => true],
         ];
 
         foreach ($menuItems as $itemData) {
@@ -49,15 +61,16 @@ class MenuItemSeeder extends Seeder
     }
 
     /**
-     * Attach all modifiers to all menu items
+     * Attach specific modifiers to all menu items
      */
     private function attachModifiersToMenuItems(): void
     {
-        $allModifiers = Modifier::all();
+        // Get only the 3 specific modifiers
+        $modifiers = Modifier::whereIn('name', ['พิเศษ', 'ไข่ดาว', 'ไข่เจียว'])->get();
         $menuItems = MenuItem::all();
 
         foreach ($menuItems as $menuItem) {
-            $menuItem->modifiers()->syncWithoutDetaching($allModifiers->pluck('id'));
+            $menuItem->modifiers()->syncWithoutDetaching($modifiers->pluck('id'));
         }
 
         $this->command->info('Modifiers attached to menu items successfully!');

@@ -14,12 +14,10 @@ class ModifierSeeder extends Seeder
     public function run(): void
     {
         $modifiers = [
-            ['name' => 'ไข่ดาว', 'price_change' => 10],
             ['name' => 'พิเศษ', 'price_change' => 10],
-            ['name' => 'ทะเล', 'price_change' => 20],
-            ['name' => 'หมูสับ', 'price_change' => 10],
-            ['name' => 'ไข่เยี่ยวม้า', 'price_change' => 20],
-            ['name' => 'เนื้อ', 'price_change' => 20],
+            ['name' => 'ไข่ดาว', 'price_change' => 10],
+            ['name' => 'ไข่เจียว', 'price_change' => 10],
+            ['name' => 'กุ้ง/หมึก', 'price_change' => 10],
         ];
 
         foreach ($modifiers as $modifier) {

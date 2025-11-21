@@ -17,7 +17,7 @@ class MenuItemController extends Controller
      * Display a listing of menu items.
      * Includes category and modifiers information.
      */
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection|JsonResponse
     {
         $query = MenuItem::with(['category', 'modifiers']);
 
@@ -40,6 +40,14 @@ class MenuItemController extends Controller
         $sortBy = $request->get('sort_by', 'name');
         $sortOrder = $request->get('sort_order', 'asc');
         $query->orderBy($sortBy, $sortOrder);
+
+        // Check if client wants all items without pagination
+        if ($request->boolean('all', false)) {
+            $menuItems = $query->get();
+            return response()->json([
+                'data' => MenuItemResource::collection($menuItems),
+            ])->header('Cache-Control', 'no-cache, no-store, must-revalidate');
+        }
 
         // Paginate results
         $perPage = $request->get('per_page', 15);

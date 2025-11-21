@@ -8,8 +8,13 @@
         </p>
       </div>
 
+      <!-- Loading State -->
+      <div v-if="dashboardStore.loading && !dashboardStore.stats" class="flex justify-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+
       <!-- Quick Stats -->
-      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div v-else class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <div class="bg-white overflow-hidden shadow-sm rounded-lg">
           <div class="p-5">
             <div class="flex items-center">
@@ -24,7 +29,7 @@
                     ออเดอร์ที่กำลังดำเนินการ
                   </dt>
                   <dd class="text-3xl font-semibold text-gray-900">
-                    {{ ordersStore.activeOrders.length }}
+                    {{ dashboardStore.stats?.activeOrdersCount ?? 0 }}
                   </dd>
                 </dl>
               </div>
@@ -46,7 +51,7 @@
                     โต๊ะว่าง
                   </dt>
                   <dd class="text-3xl font-semibold text-gray-900">
-                    12
+                    {{ dashboardStore.stats?.availableTablesCount ?? 0 }}
                   </dd>
                 </dl>
               </div>
@@ -68,7 +73,7 @@
                     ยอดขายวันนี้
                   </dt>
                   <dd class="text-3xl font-semibold text-gray-900">
-                    ฿2,450
+                    ฿{{ formatNumber(dashboardStore.stats?.todaySales ?? '0') }}
                   </dd>
                 </dl>
               </div>
@@ -87,10 +92,10 @@
               <div class="ml-5 w-0 flex-1">
                 <dl>
                   <dt class="text-sm font-medium text-gray-500 truncate">
-                    จำนวนลูกค้า
+                    จำนวนออเดอร์วันนี้
                   </dt>
                   <dd class="text-3xl font-semibold text-gray-900">
-                    28
+                    {{ dashboardStore.stats?.todayCustomers ?? 0 }}
                   </dd>
                 </dl>
               </div>
@@ -151,14 +156,55 @@
         </div>
       </div>
 
-      <!-- Recent Activity (Placeholder) -->
-      <div class="bg-white shadow-sm rounded-lg">
+      <!-- Recent Activity -->
+      <div v-if="dashboardStore.stats?.recentOrders && dashboardStore.stats.recentOrders.length > 0" class="bg-white shadow-sm rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">
+            กิจกรรมล่าสุด
+          </h3>
+          <div class="flow-root">
+            <ul role="list" class="-my-5 divide-y divide-gray-200">
+              <li v-for="order in dashboardStore.stats.recentOrders" :key="order.id" class="py-4">
+                <div class="flex items-center space-x-4">
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">
+                      โต๊ะ {{ order.table_number }}
+                    </p>
+                    <p class="text-sm text-gray-500">
+                      {{ order.user_name }} • {{ order.created_at }}
+                    </p>
+                  </div>
+                  <div class="flex items-center space-x-4">
+                    <span :class="[
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                      order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      order.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
+                      order.status === 'preparing' ? 'bg-purple-100 text-purple-800' :
+                      order.status === 'ready' ? 'bg-green-100 text-green-800' :
+                      order.status === 'completed' ? 'bg-gray-100 text-gray-800' :
+                      'bg-red-100 text-red-800'
+                    ]">
+                      {{ getStatusText(order.status) }}
+                    </span>
+                    <div class="text-sm font-medium text-gray-900">
+                      ฿{{ formatNumber(order.total_amount) }}
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State for Recent Activity -->
+      <div v-else class="bg-white shadow-sm rounded-lg">
         <div class="px-4 py-5 sm:p-6">
           <h3 class="text-lg font-medium text-gray-900 mb-4">
             กิจกรรมล่าสุด
           </h3>
           <p class="text-sm text-gray-500">
-            กิจกรรมต่างๆ จะแสดงที่นี่...
+            ยังไม่มีออเดอร์ในระบบ
           </p>
         </div>
       </div>
@@ -170,14 +216,31 @@
 import { onMounted } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { useAuthStore } from '@/stores/auth';
-import { useOrdersStore } from '@/stores/orders';
+import { useDashboardStore } from '@/stores/dashboard';
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue';
 
 const authStore = useAuthStore();
-const ordersStore = useOrdersStore();
+const dashboardStore = useDashboardStore();
+
+const formatNumber = (value: string | number): string => {
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+const getStatusText = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    'pending': 'รอดำเนินการ',
+    'confirmed': 'ยืนยันแล้ว',
+    'preparing': 'กำลังเตรียม',
+    'ready': 'พร้อมเสิร์ฟ',
+    'completed': 'เสร็จสิ้น',
+    'cancelled': 'ยกเลิก',
+  };
+  return statusMap[status] || status;
+};
 
 onMounted(async () => {
-  // Fetch active orders for dashboard stats
-  await ordersStore.fetchActiveOrders();
+  // Fetch dashboard stats
+  await dashboardStore.fetchStats();
 });
 </script>
