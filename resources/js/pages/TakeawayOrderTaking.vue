@@ -38,7 +38,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        เบอร์โทรศัพท์ <span class="text-red-500">*</span>
+                                        เบอร์โทรศัพท์
                                     </label>
                                     <input
                                         v-model="customerPhone"
@@ -408,8 +408,7 @@ const filteredMenuItems = computed(() => {
 
 const canPlaceOrder = computed(() => {
     return cartStore.items.length > 0 
-        && customerName.value.trim() !== '' 
-        && customerPhone.value.trim() !== '';
+        && customerName.value.trim() !== '';
 });
 
 // Methods

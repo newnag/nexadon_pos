@@ -282,7 +282,7 @@
                                     ฿{{ amount }}
                                 </button>
                                 <button
-                                    @click="cashReceived = finalTotal; calculateChange()"
+                                    @click="cashReceived = parseFloat(finalTotal.toFixed(2)); calculateChange()"
                                     type="button"
                                     class="px-3 py-2 bg-green-100 border border-green-300 rounded-lg text-sm font-medium hover:bg-green-200 transition"
                                 >
@@ -581,7 +581,7 @@ const changeAmount = ref(0);
 
 // Quick amount buttons (common banknotes)
 const quickAmounts = computed(() => {
-    const total = finalTotal.value;
+    const total = parseFloat(finalTotal.value.toFixed(2));
     return [
         100,
         500,
@@ -624,7 +624,8 @@ const serviceCharge = computed(() => {
 });
 
 const finalTotal = computed(() => {
-    return subtotal.value + vatAmount.value + serviceCharge.value;
+    const total = subtotal.value + vatAmount.value + serviceCharge.value;
+    return parseFloat(total.toFixed(2));
 });
 
 const amountPerPerson = computed(() => {
@@ -662,7 +663,9 @@ const selectPaymentMethod = (method: string) => {
 // Calculate change for cash payment
 const calculateChange = () => {
     if (selectedPaymentMethod.value === 'cash') {
-        changeAmount.value = cashReceived.value - finalTotal.value;
+        // Round finalTotal to 2 decimal places to avoid floating point issues
+        const roundedTotal = parseFloat(finalTotal.value.toFixed(2));
+        changeAmount.value = cashReceived.value - roundedTotal;
     }
 };
 
@@ -726,12 +729,14 @@ const processPayment = async () => {
 
     // Validate cash payment
     if (selectedPaymentMethod.value === 'cash') {
+        const roundedTotal = parseFloat(finalTotal.value.toFixed(2));
+        
         if (cashReceived.value <= 0) {
             showAlert('กรุณากรอกจำนวนเงินที่รับมา');
             return;
         }
-        if (cashReceived.value < finalTotal.value) {
-            showAlert(`เงินไม่เพียงพอ ต้องการอีก ฿${(finalTotal.value - cashReceived.value).toFixed(2)}`);
+        if (cashReceived.value < roundedTotal) {
+            showAlert(`เงินไม่เพียงพอ ต้องการอีก ฿${(roundedTotal - cashReceived.value).toFixed(2)}`);
             return;
         }
     }

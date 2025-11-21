@@ -33,13 +33,28 @@ class DashboardController extends Controller
                 ->where('status', 'completed')
                 ->count();
 
+            // Get recent orders (last 5)
+            $recentOrders = Order::with(['table', 'user'])
+                ->orderBy('created_at', 'desc')
+                ->take(5)
+                ->get()
+                ->map(function ($order) {
+                    return [
+                        'id' => $order->id,
+                        'table_number' => $order->table ? $order->table->table_number : 'N/A',
+                        'user_name' => $order->user ? $order->user->name : 'Unknown',
+                        'status' => $order->status,
+                        'total_amount' => $order->total_amount,
+                        'created_at' => $order->created_at->format('H:i'),
+                    ];
+                });
+
             return response()->json([
-                'data' => [
-                    'active_orders' => $activeOrdersCount,
-                    'available_tables' => $availableTablesCount,
-                    'today_sales' => number_format($todaySales, 2, '.', ''),
-                    'today_customers' => $todayCustomers,
-                ],
+                'activeOrdersCount' => $activeOrdersCount,
+                'availableTablesCount' => $availableTablesCount,
+                'todaySales' => number_format($todaySales, 2, '.', ''),
+                'todayCustomers' => $todayCustomers,
+                'recentOrders' => $recentOrders,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([

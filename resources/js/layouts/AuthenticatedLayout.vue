@@ -67,6 +67,14 @@
             </Link>
 
             <Link
+              href="/takeaway"
+              class="inline-flex items-center px-3 lg:px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+              :class="isActive('/takeaway')"
+            >
+              ออเดอร์กลับบ้าน
+            </Link>
+
+            <Link
               v-if="hasRole(['Admin', 'Manager'])"
               href="/kitchen"
               class="inline-flex items-center px-3 lg:px-4 py-2 text-sm font-medium rounded-lg transition-colors"
@@ -149,6 +157,15 @@
             :class="isActiveMobile('/tables')"
           >
             จัดการโต๊ะ
+          </Link>
+
+          <Link
+            href="/takeaway"
+            @click="mobileMenuOpen = false"
+            class="block px-3 py-2 rounded-md text-base font-medium"
+            :class="isActiveMobile('/takeaway')"
+          >
+            ออเดอร์กลับบ้าน
           </Link>
 
           <Link

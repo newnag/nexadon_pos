@@ -44,7 +44,7 @@ class StoreOrderRequest extends FormRequest
         // For takeaway orders, customer info is required
         if ($orderType === 'takeaway') {
             $rules['customer_name'] = ['required', 'string', 'max:255'];
-            $rules['customer_phone'] = ['required', 'string', 'max:20'];
+            $rules['customer_phone'] = ['nullable', 'string', 'max:20'];
         } else {
             $rules['customer_name'] = ['nullable', 'string', 'max:255'];
             $rules['customer_phone'] = ['nullable', 'string', 'max:20'];

@@ -241,6 +241,12 @@
                         ></textarea>
                     </div>
 
+                    <!-- Total Price Summary -->
+                    <div class="mb-4 p-3 bg-blue-50 rounded-lg flex justify-between items-center">
+                        <span class="font-semibold text-gray-900">ยอดรวม</span>
+                        <span class="text-xl font-bold text-blue-600">฿{{ modalTotalPrice.toFixed(2) }}</span>
+                    </div>
+
                     <!-- Add to Cart Button -->
                     <button
                         @click="addToCartFromModal"
@@ -375,6 +381,19 @@ const modalNotes = ref('');
 const showAlertModal = ref(false);
 const alertMessage = ref('');
 const alertType = ref<'success' | 'error' | 'warning'>('success');
+
+const modalTotalPrice = computed(() => {
+    if (!selectedItem.value) return 0;
+    
+    let price = parseFloat(selectedItem.value.price);
+    
+    // Add modifier prices
+    selectedModifiers.value.forEach(mod => {
+        price += parseFloat(mod.price_change);
+    });
+    
+    return price * modalQuantity.value;
+});
 
 const showAlert = (message: string, type: 'success' | 'error' | 'warning' = 'success') => {
     alertMessage.value = message;

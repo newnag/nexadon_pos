@@ -40,18 +40,28 @@ class ReportController extends Controller
             $query->whereBetween('created_at', [$from, $to]);
         })->sum('quantity');
 
+        // Subquery for modifier prices
+        $modifierTotals = DB::table('order_item_modifiers')
+            ->join('modifiers', 'order_item_modifiers.modifier_id', '=', 'modifiers.id')
+            ->select('order_item_modifiers.order_item_id', DB::raw('SUM(modifiers.price_change) as modifier_price'))
+            ->groupBy('order_item_modifiers.order_item_id');
+
         // Top Selling Items
         $topSellingItems = DB::table('order_items')
             ->join('menu_items', 'order_items.menu_item_id', '=', 'menu_items.id')
             ->join('categories', 'menu_items.category_id', '=', 'categories.id')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->leftJoinSub($modifierTotals, 'modifiers_sum', function ($join) {
+                $join->on('order_items.id', '=', 'modifiers_sum.order_item_id');
+            })
             ->whereBetween('orders.created_at', [$from, $to])
+            ->where('orders.status', 'completed') // Only count completed orders
             ->select(
                 'menu_items.id',
                 'menu_items.name',
                 'categories.name as category',
                 DB::raw('SUM(order_items.quantity) as quantity'),
-                DB::raw('SUM(order_items.quantity * menu_items.price) as revenue')
+                DB::raw('SUM(order_items.quantity * (menu_items.price + COALESCE(modifiers_sum.modifier_price, 0))) as revenue')
             )
             ->groupBy('menu_items.id', 'menu_items.name', 'categories.name')
             ->orderByDesc('quantity')
@@ -72,10 +82,14 @@ class ReportController extends Controller
             ->join('menu_items', 'order_items.menu_item_id', '=', 'menu_items.id')
             ->join('categories', 'menu_items.category_id', '=', 'categories.id')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->leftJoinSub($modifierTotals, 'modifiers_sum', function ($join) {
+                $join->on('order_items.id', '=', 'modifiers_sum.order_item_id');
+            })
             ->whereBetween('orders.created_at', [$from, $to])
+            ->where('orders.status', 'completed') // Only count completed orders
             ->select(
                 'categories.name',
-                DB::raw('SUM(order_items.quantity * menu_items.price) as revenue')
+                DB::raw('SUM(order_items.quantity * (menu_items.price + COALESCE(modifiers_sum.modifier_price, 0))) as revenue')
             )
             ->groupBy('categories.name')
             ->orderByDesc('revenue')
