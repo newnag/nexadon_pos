@@ -9,7 +9,6 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OrderItemController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\TableController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderHistoryController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
