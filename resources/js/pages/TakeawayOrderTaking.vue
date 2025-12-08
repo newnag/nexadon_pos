@@ -357,6 +357,10 @@ import DefaultLayout from '@/layouts/DefaultLayout.vue';
 import { useCartStore } from '@/stores/cart';
 import api from '@/lib/api';
 
+const props = defineProps<{
+    orderId?: number;
+}>();
+
 interface Category {
     id: number;
     name: string;
@@ -384,6 +388,7 @@ const menuItems = ref<MenuItem[]>([]);
 const selectedCategory = ref<number | null>(null);
 const loadingMenu = ref(false);
 const placingOrder = ref(false);
+const existingOrder = ref<any>(null);
 
 // Customer info
 const customerName = ref('');
@@ -407,11 +412,42 @@ const filteredMenuItems = computed(() => {
 });
 
 const canPlaceOrder = computed(() => {
+    if (props.orderId) {
+        return cartStore.items.length > 0;
+    }
     return cartStore.items.length > 0 
         && customerName.value.trim() !== '';
 });
 
 // Methods
+const fetchOrderDetails = async () => {
+    if (!props.orderId) return;
+    
+    try {
+        const response = await api.get(`/orders/${props.orderId}`);
+        existingOrder.value = response.data.data;
+        customerName.value = existingOrder.value.customer_name;
+        customerPhone.value = existingOrder.value.customer_phone;
+
+        // Populate cart with existing items
+        if (existingOrder.value.order_items) {
+            existingOrder.value.order_items.forEach((item: any) => {
+                cartStore.addItem(
+                    item.menu_item,
+                    item.quantity,
+                    item.notes,
+                    item.modifiers || [],
+                    item.id
+                );
+            });
+        }
+    } catch (error) {
+        console.error('Failed to fetch order details:', error);
+        alert('ไม่สามารถโหลดข้อมูลออเดอร์ได้');
+        returnToTakeawayList();
+    }
+};
+
 const fetchCategories = async () => {
     try {
         const response = await api.get('/categories');
@@ -490,29 +526,38 @@ const placeOrder = async () => {
     placingOrder.value = true;
 
     try {
-        const orderData = {
-            order_type: 'takeaway',
-            customer_name: customerName.value.trim(),
-            customer_phone: customerPhone.value.trim(),
-            order_items: cartStore.getOrderItems(),
-        };
+        if (props.orderId) {
+            // Update existing order
+            const orderData = {
+                order_items: cartStore.getOrderItems(),
+            };
 
-        const response = await api.post('/orders', orderData);
+            await api.put(`/orders/${props.orderId}`, orderData);
+            alert(`✅ เพิ่มรายการสำเร็จ!`);
+        } else {
+            // Create new order
+            const orderData = {
+                order_type: 'takeaway',
+                customer_name: customerName.value.trim(),
+                customer_phone: customerPhone.value.trim(),
+                order_items: cartStore.getOrderItems(),
+            };
+
+            const response = await api.post('/orders', orderData);
+            alert(`✅ สร้างออเดอร์สำเร็จ!\n\nลูกค้า: ${orderData.customer_name}\nออเดอร์ #${response.data.data.id}`);
+        }
 
         // Clear cart and customer info
         cartStore.clearCart();
         customerName.value = '';
         customerPhone.value = '';
 
-        // Show success message
-        alert(`✅ สร้างออเดอร์สำเร็จ!\n\nลูกค้า: ${orderData.customer_name}\nออเดอร์ #${response.data.data.id}`);
-
         // Return to takeaway orders list
         returnToTakeawayList();
 
     } catch (error: any) {
         console.error('Failed to place order:', error);
-        alert('❌ ไม่สามารถสร้างออเดอร์ได้ กรุณาลองใหม่อีกครั้ง\n\n' + 
+        alert('❌ ไม่สามารถดำเนินการได้ กรุณาลองใหม่อีกครั้ง\n\n' + 
               (error.response?.data?.message || 'เกิดข้อผิดพลาด'));
     } finally {
         placingOrder.value = false;
@@ -523,9 +568,12 @@ const returnToTakeawayList = () => {
     router.visit('/takeaway');
 };
 
-onMounted(() => {
-    fetchCategories();
-    fetchMenuItems();
+onMounted(async () => {
     cartStore.clearCart(); // Clear cart when entering this page
+    await Promise.all([
+        fetchCategories(),
+        fetchMenuItems(),
+        fetchOrderDetails()
+    ]);
 });
 </script>

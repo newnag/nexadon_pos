@@ -20,6 +20,7 @@ export interface Modifier {
 }
 
 export interface CartItem {
+    orderItemId?: number; // Optional ID for existing order items
     menuItem: MenuItem;
     quantity: number;
     notes: string;
@@ -58,9 +59,11 @@ export const useCartStore = defineStore('cart', () => {
         menuItem: MenuItem,
         quantity: number = 1,
         notes: string = '',
-        selectedModifiers: Modifier[] = []
+        selectedModifiers: Modifier[] = [],
+        orderItemId?: number
     ) => {
         const newItem: CartItem = {
+            orderItemId,
             menuItem,
             quantity,
             notes,
@@ -114,6 +117,7 @@ export const useCartStore = defineStore('cart', () => {
     // Format items for API request
     const getOrderItems = () => {
         return items.value.map((item) => ({
+            order_item_id: item.orderItemId,
             menu_item_id: item.menuItem.id,
             quantity: item.quantity,
             notes: item.notes,

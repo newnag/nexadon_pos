@@ -69,3 +69,9 @@ Route::get('/takeaway/new', function () {
     return Inertia::render('TakeawayOrderTaking');
 })->middleware(['auth'])->name('takeaway.new');
 
+Route::get('/takeaway/{order}/edit', function ($order) {
+    return Inertia::render('TakeawayOrderTaking', [
+        'orderId' => $order
+    ]);
+})->middleware(['auth'])->name('takeaway.edit');
+

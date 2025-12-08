@@ -159,7 +159,7 @@ class OrderController extends Controller
     }
 
     /**
-     * Update an existing order (add more items).
+     * Update an existing order (add, update, or remove items).
      */
     public function update(UpdateOrderRequest $request, Order $order): JsonResponse
     {
@@ -179,39 +179,66 @@ class OrderController extends Controller
                 $order->update(['status' => $request->status]);
             }
 
-            // Add new order items
-            $totalAmount = $order->total_amount;
+            // Get existing order item IDs
+            $existingItemIds = $order->orderItems()->pluck('id')->toArray();
+            
+            // Get incoming item IDs (filter out nulls)
+            $incomingItemIds = collect($request->order_items)
+                ->pluck('order_item_id')
+                ->filter()
+                ->toArray();
+
+            // Identify items to delete (present in DB but not in request)
+            $itemsToDelete = array_diff($existingItemIds, $incomingItemIds);
+            if (!empty($itemsToDelete)) {
+                OrderItem::destroy($itemsToDelete);
+            }
+
+            $totalAmount = 0;
 
             foreach ($request->order_items as $item) {
                 $menuItem = MenuItem::findOrFail($item['menu_item_id']);
+                $orderItem = null;
 
-                // Check if menu item is available
-                if (!$menuItem->is_available) {
-                    DB::rollBack();
-                    return response()->json([
-                        'message' => "Menu item '{$menuItem->name}' is currently unavailable.",
-                    ], 422);
+                if (isset($item['order_item_id']) && in_array($item['order_item_id'], $existingItemIds)) {
+                    // Update existing item
+                    $orderItem = OrderItem::find($item['order_item_id']);
+                    $orderItem->update([
+                        'menu_item_id' => $item['menu_item_id'],
+                        'quantity' => $item['quantity'],
+                        'notes' => $item['notes'] ?? null,
+                    ]);
+                    
+                    // Sync modifiers
+                    if (isset($item['modifier_ids'])) {
+                        $orderItem->modifiers()->sync($item['modifier_ids']);
+                    } else {
+                        $orderItem->modifiers()->detach();
+                    }
+                } else {
+                    // Create new item
+                    // Check availability for new items
+                    if (!$menuItem->is_available) {
+                         DB::rollBack();
+                         return response()->json([
+                             'message' => "Menu item '{$menuItem->name}' is currently unavailable.",
+                         ], 422);
+                    }
+
+                    $orderItem = OrderItem::create([
+                        'order_id' => $order->id,
+                        'menu_item_id' => $item['menu_item_id'],
+                        'quantity' => $item['quantity'],
+                        'notes' => $item['notes'] ?? null,
+                    ]);
+
+                    if (!empty($item['modifier_ids'])) {
+                        $orderItem->modifiers()->attach($item['modifier_ids']);
+                    }
                 }
 
-                // Create order item
-                $orderItem = OrderItem::create([
-                    'order_id' => $order->id,
-                    'menu_item_id' => $item['menu_item_id'],
-                    'quantity' => $item['quantity'],
-                    'notes' => $item['notes'] ?? null,
-                ]);
-
-                // Attach modifiers if provided
-                if (!empty($item['modifier_ids'])) {
-                    $orderItem->modifiers()->attach($item['modifier_ids']);
-                }
-
-                // Calculate item total (price + modifiers) * quantity
-                $modifiersTotal = 0;
-                if (!empty($item['modifier_ids'])) {
-                    $modifiersTotal = $orderItem->modifiers()->sum('price_change');
-                }
-                
+                // Calculate item total
+                $modifiersTotal = $orderItem->modifiers()->sum('price_change');
                 $itemTotal = ($menuItem->price + $modifiersTotal) * $item['quantity'];
                 $totalAmount += $itemTotal;
             }
