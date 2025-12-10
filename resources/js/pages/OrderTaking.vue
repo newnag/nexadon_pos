@@ -66,16 +66,26 @@
                                 </div>
                                 
                                 <!-- Go to Billing Button (shown when table has active order) -->
-                                <button
-                                    v-if="currentTable.status === 'occupied' && currentTable.active_order"
-                                    @click="goToBilling"
-                                    class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition flex items-center justify-center gap-2"
-                                >
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                                    </svg>
-                                    ไปชำระเงิน
-                                </button>
+                                <div v-if="currentTable.status === 'occupied' && currentTable.active_order" class="space-y-2">
+                                    <button
+                                        @click="goToBilling"
+                                        class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition flex items-center justify-center gap-2"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                        ไปชำระเงิน
+                                    </button>
+                                    <button
+                                        @click="cancelOrder"
+                                        class="w-full px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-semibold rounded-lg transition flex items-center justify-center gap-2"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        ยกเลิกออเดอร์
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- Warning if no table -->
@@ -447,8 +457,39 @@ const fetchAvailableTables = async (tableId: number) => {
         const response = await api.get(`/tables/${tableId}`);
         currentTable.value = response.data.data;
         selectedTable.value = tableId.toString();
+
+        // If table has active order, fetch order details and populate cart
+        if (currentTable.value?.active_order) {
+            await fetchOrderDetails(currentTable.value.active_order.id);
+        }
     } catch (error) {
         console.error('Failed to fetch table details:', error);
+    }
+};
+
+const fetchOrderDetails = async (orderId: number) => {
+    try {
+        const response = await api.get(`/orders/${orderId}`);
+        const order = response.data.data;
+        
+        // Clear cart first to avoid duplicates if called multiple times
+        cartStore.clearCart();
+
+        // Populate cart with existing items
+        if (order.order_items) {
+            order.order_items.forEach((item: any) => {
+                cartStore.addItem(
+                    item.menu_item,
+                    item.quantity,
+                    item.notes,
+                    item.modifiers || [],
+                    item.id // Pass order_item_id
+                );
+            });
+        }
+    } catch (error) {
+        console.error('Failed to fetch order details:', error);
+        showAlert('ไม่สามารถโหลดข้อมูลออเดอร์ได้', 'error');
     }
 };
 
@@ -533,6 +574,26 @@ const placeOrder = async () => {
 const goToBilling = () => {
     if (currentTable.value?.active_order?.id) {
         window.location.href = `/billing/${currentTable.value.active_order.id}`;
+    }
+};
+
+const cancelOrder = async () => {
+    if (!currentTable.value?.active_order?.id) return;
+    
+    if (!confirm('คุณต้องการยกเลิกออเดอร์โต๊ะนี้ใช่หรือไม่?')) return;
+
+    try {
+        await api.put(`/orders/${currentTable.value.active_order.id}`, { status: 'cancelled' });
+        showAlert('ยกเลิกออเดอร์เรียบร้อยแล้ว', 'success');
+        
+        // Refresh table status
+        if (selectedTable.value) {
+            await fetchAvailableTables(parseInt(selectedTable.value));
+        }
+        cartStore.clearCart();
+    } catch (error) {
+        console.error('Failed to cancel order:', error);
+        showAlert('ไม่สามารถยกเลิกออเดอร์ได้', 'error');
     }
 };
 

@@ -125,6 +125,16 @@
                                     </svg>
                                 </button>
                                 <button
+                                    v-if="!order.payment"
+                                    @click="cancelOrder(order.id)"
+                                    class="px-4 py-3 bg-red-100 text-red-700 font-semibold rounded-lg hover:bg-red-200 transition flex items-center justify-center"
+                                    title="ยกเลิกออเดอร์"
+                                >
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                                <button
                                     @click="viewOrderDetails(order)"
                                     class="px-4 py-3 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition flex items-center justify-center"
                                     :class="order.payment ? 'flex-1' : ''"
@@ -385,6 +395,20 @@ const createNewOrder = () => {
 // Edit existing order
 const editOrder = (orderId: number) => {
     router.visit(`/takeaway/${orderId}/edit`);
+};
+
+// Cancel order
+const cancelOrder = async (orderId: number) => {
+    if (!confirm('คุณต้องการยกเลิกออเดอร์นี้ใช่หรือไม่?')) return;
+
+    try {
+        await api.put(`/orders/${orderId}`, { status: 'cancelled' });
+        // Refresh list
+        fetchTakeawayOrders();
+    } catch (error) {
+        console.error('Failed to cancel order:', error);
+        alert('ไม่สามารถยกเลิกออเดอร์ได้');
+    }
 };
 
 // Go to billing page

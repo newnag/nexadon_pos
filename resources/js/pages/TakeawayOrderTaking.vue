@@ -227,6 +227,15 @@
                             >
                                 ล้างรายการทั้งหมด
                             </button>
+
+                            <!-- Cancel Order (Edit Mode Only) -->
+                            <button
+                                v-if="props.orderId"
+                                @click="cancelOrder"
+                                class="w-full mt-2 py-2 text-sm text-red-600 hover:text-red-800 font-medium border border-red-200 rounded-lg hover:bg-red-50"
+                            >
+                                ยกเลิกออเดอร์นี้
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -517,6 +526,20 @@ const addToCartFromModal = () => {
 const clearCart = () => {
     if (confirm('คุณต้องการล้างรายการทั้งหมดใช่หรือไม่?')) {
         cartStore.clearCart();
+    }
+};
+
+const cancelOrder = async () => {
+    if (!props.orderId) return;
+    if (!confirm('คุณต้องการยกเลิกออเดอร์นี้ใช่หรือไม่?')) return;
+
+    try {
+        await api.put(`/orders/${props.orderId}`, { status: 'cancelled' });
+        alert('ยกเลิกออเดอร์เรียบร้อยแล้ว');
+        returnToTakeawayList();
+    } catch (error) {
+        console.error('Failed to cancel order:', error);
+        alert('ไม่สามารถยกเลิกออเดอร์ได้');
     }
 };
 
