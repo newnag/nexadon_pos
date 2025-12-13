@@ -25,8 +25,8 @@ uses(RefreshDatabase::class);
 describe('Creating a New Order', function () {
     beforeEach(function () {
         // Create roles
-        $this->waiterRole = Role::create(['name' => 'Waiter']);
-        $this->adminRole = Role::create(['name' => 'Admin']);
+        $this->waiterRole = Role::firstOrCreate(['name' => 'Waiter']);
+        $this->adminRole = Role::firstOrCreate(['name' => 'Admin']);
 
         // Create users
         $this->waiter = User::factory()->create([
@@ -405,7 +405,7 @@ describe('Creating a New Order', function () {
 describe('Fetching Orders', function () {
     beforeEach(function () {
         // Create role and user
-        $this->waiterRole = Role::create(['name' => 'Waiter']);
+        $this->waiterRole = Role::firstOrCreate(['name' => 'Waiter']);
         $this->waiter = User::factory()->create([
             'role_id' => $this->waiterRole->id,
         ]);
@@ -638,7 +638,7 @@ describe('Fetching Orders', function () {
 describe('Updating Orders', function () {
     beforeEach(function () {
         // Create role and user
-        $this->waiterRole = Role::create(['name' => 'Waiter']);
+        $this->waiterRole = Role::firstOrCreate(['name' => 'Waiter']);
         $this->waiter = User::factory()->create([
             'role_id' => $this->waiterRole->id,
         ]);
@@ -676,8 +676,15 @@ describe('Updating Orders', function () {
     });
 
     test('can add more items to an existing order', function () {
+        $existingItem = $this->order->orderItems->first();
+
         $updateData = [
             'order_items' => [
+                [
+                    'order_item_id' => $existingItem->id,
+                    'menu_item_id' => $this->menuItem1->id,
+                    'quantity' => 1,
+                ],
                 [
                     'menu_item_id' => $this->menuItem2->id,
                     'quantity' => 2,
@@ -745,5 +752,21 @@ describe('Updating Orders', function () {
             ->assertJson([
                 'message' => 'Cannot modify a completed or cancelled order.',
             ]);
+    });
+
+    test('cancelling an order frees up the table', function () {
+        // Ensure table is occupied initially
+        $this->table->update(['status' => 'occupied']);
+        $this->order->update(['status' => 'pending']);
+
+        $response = $this->actingAs($this->waiter, 'sanctum')
+            ->putJson('/api/orders/' . $this->order->id, [
+                'status' => 'cancelled'
+            ]);
+
+        $response->assertStatus(200);
+
+        // Verify table is available
+        expect($this->table->fresh()->status)->toBe('available');
     });
 });

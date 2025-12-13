@@ -177,6 +177,11 @@ class OrderController extends Controller
             // Update status if provided
             if ($request->has('status')) {
                 $order->update(['status' => $request->status]);
+
+                // If order is cancelled, free up the table
+                if ($request->status === 'cancelled' && $order->table) {
+                    $order->table->update(['status' => 'available']);
+                }
             }
 
             if ($request->has('order_items')) {

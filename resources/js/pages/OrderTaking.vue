@@ -591,6 +591,11 @@ const cancelOrder = async () => {
             await fetchAvailableTables(parseInt(selectedTable.value));
         }
         cartStore.clearCart();
+
+        // Redirect to tables view
+        setTimeout(() => {
+            window.location.href = '/tables';
+        }, 1500);
     } catch (error) {
         console.error('Failed to cancel order:', error);
         showAlert('ไม่สามารถยกเลิกออเดอร์ได้', 'error');
